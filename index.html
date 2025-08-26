@@ -2,137 +2,96 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Progress Laporan Bulanan Bank</title>
+  <title>Progress Laporan Bulanan</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
-    <h1 class="text-2xl font-bold mb-6 text-center">Progress Laporan Bulanan</h1>
+<body class="bg-gray-100 p-6">
 
-    <!-- Tabel Laporan Aktif -->
-    <h2 class="text-xl font-semibold mb-3">Laporan Aktif</h2>
-    <div class="overflow-x-auto mb-8">
-      <table id="tabelLaporan" class="min-w-full border border-gray-200 text-sm text-left">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="border px-2 py-1">No</th>
-            <th class="border px-2 py-1">Judul Laporan</th>
-            <th class="border px-2 py-1">Periode</th>
-            <th class="border px-2 py-1">Batas Waktu</th>
-            <th class="border px-2 py-1">PIC</th>
-            <th class="border px-2 py-1">Detail</th>
-            <th class="border px-2 py-1">Checklist</th>
-            <th class="border px-2 py-1">Progress</th>
-          </tr>
-        </thead>
-        <tbody id="laporanBody"></tbody>
-      </table>
-    </div>
+  <div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-xl font-bold mb-4">Progress Laporan Bulanan</h1>
 
-    <!-- Tabel Laporan Selesai -->
-    <h2 class="text-xl font-semibold mb-3">Laporan Selesai</h2>
-    <div class="overflow-x-auto">
-      <table id="tabelSelesai" class="min-w-full border border-gray-200 text-sm text-left">
-        <thead class="bg-green-100">
-          <tr>
-            <th class="border px-2 py-1">No</th>
-            <th class="border px-2 py-1">Judul Laporan</th>
-            <th class="border px-2 py-1">Periode</th>
-            <th class="border px-2 py-1">Batas Waktu</th>
-            <th class="border px-2 py-1">PIC</th>
-            <th class="border px-2 py-1">Detail</th>
-            <th class="border px-2 py-1">Progress</th>
-          </tr>
-        </thead>
-        <tbody id="selesaiBody"></tbody>
-      </table>
-    </div>
+    <table class="w-full border-collapse border border-gray-300 text-sm">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border p-2">No</th>
+          <th class="border p-2">Judul Laporan</th>
+          <th class="border p-2">Periode</th>
+          <th class="border p-2">Batas Waktu</th>
+          <th class="border p-2">PIC 1</th>
+          <th class="border p-2">PIC 2</th>
+          <th class="border p-2">Tahap Awal</th>
+          <th class="border p-2">Tahap Selesai</th>
+          <th class="border p-2">Tahap Pengiriman</th>
+          <th class="border p-2">Progress</th>
+        </tr>
+      </thead>
+      <tbody id="laporanBody"></tbody>
+    </table>
   </div>
 
   <script>
-    const laporan = [
-      {judul: "Laporan Neraca", periode: "Juli 2025", deadline: "2025-08-28", pic: "Andi", detail: "Laporan posisi keuangan bank.", checklist: [false,false,false]},
-      {judul: "Laporan Laba Rugi", periode: "Juli 2025", deadline: "2025-08-30", pic: "Citra", detail: "Laporan pendapatan dan beban bank.", checklist: [true,false,false]},
-      {judul: "Laporan Kolektibilitas Kredit", periode: "Juli 2025", deadline: "2025-08-27", pic: "Eka", detail: "Laporan kualitas kredit nasabah.", checklist: [true,true,false]}
-    ];
+    let laporan = [];
+
+    // Muat data dari localStorage jika ada
+    const saved = localStorage.getItem("laporanData");
+
+    if (saved) {
+      laporan = JSON.parse(saved);
+      renderTable();
+    } else {
+      // Jika belum ada, ambil dari laporan.json
+      fetch("laporan.json")
+        .then(res => res.json())
+        .then(data => {
+          laporan = data;
+          renderTable();
+        });
+    }
 
     function renderTable() {
-      // sort by deadline ascending
+      const tbody = document.getElementById("laporanBody");
+      tbody.innerHTML = "";
+
+      // Urutkan laporan berdasarkan deadline terdekat
       laporan.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
-      const body = document.getElementById("laporanBody");
-      const selesaiBody = document.getElementById("selesaiBody");
-      body.innerHTML = "";
-      selesaiBody.innerHTML = "";
+      laporan.forEach((lap, i) => {
+        const progress = lap.checklist.filter(c => c).length / 3 * 100;
 
-      let noAktif = 1, noSelesai = 1;
-      const today = new Date();
-
-      laporan.forEach((lap, index) => {
-        const totalChecklist = lap.checklist.filter(x => x).length;
-        const progress = Math.round((totalChecklist / 3) * 100);
-        const deadlineDate = new Date(lap.deadline);
-        const diffDays = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
-
-        if(progress < 100){
-          // laporan aktif
-          let row = document.createElement("tr");
-          // Jika deadline tinggal ≤ 5 hari, beri warna merah muda
-          if(diffDays <= 5){
-            row.classList.add("bg-red-100");
-          }
-
-          row.innerHTML = `
-            <td class="border px-2 py-1">${noAktif++}</td>
-            <td class="border px-2 py-1">${lap.judul}</td>
-            <td class="border px-2 py-1">${lap.periode}</td>
-            <td class="border px-2 py-1">${lap.deadline}</td>
-            <td class="border px-2 py-1">${lap.pic}</td>
-            <td class="border px-2 py-1">${lap.detail}</td>
-            <td class="border px-2 py-1">
-              <div class="space-y-1">
-                <label><input type="checkbox" ${lap.checklist[0] ? "checked":""} onchange="updateChecklist(${index},0)"> Awal</label><br>
-                <label><input type="checkbox" ${lap.checklist[1] ? "checked":""} onchange="updateChecklist(${index},1)"> Selesai</label><br>
-                <label><input type="checkbox" ${lap.checklist[2] ? "checked":""} onchange="updateChecklist(${index},2)"> Pengiriman</label>
-              </div>
+        const row = `
+          <tr class="border">
+            <td class="border p-2 text-center">${i + 1}</td>
+            <td class="border p-2">${lap.judul}</td>
+            <td class="border p-2">${lap.periode}</td>
+            <td class="border p-2">${lap.deadline}</td>
+            <td class="border p-2">${lap.pic1}</td>
+            <td class="border p-2">${lap.pic2}</td>
+            <td class="border p-2 text-center">
+              <input type="checkbox" ${lap.checklist[0] ? "checked" : ""} onchange="updateProgress(${i},0,this)">
             </td>
-            <td class="border px-2 py-1 w-48">
-              <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
-                <div class="bg-blue-600 h-4 rounded-full text-xs text-white text-center" style="width:${progress}%">${progress}%</div>
-              </div>
-              <button onclick="saveProgress(${index})" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">Save</button>
+            <td class="border p-2 text-center">
+              <input type="checkbox" ${lap.checklist[1] ? "checked" : ""} onchange="updateProgress(${i},1,this)">
             </td>
-          `;
-          body.appendChild(row);
-        } else {
-          // laporan selesai
-          let row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="border px-2 py-1">${noSelesai++}</td>
-            <td class="border px-2 py-1">${lap.judul}</td>
-            <td class="border px-2 py-1">${lap.periode}</td>
-            <td class="border px-2 py-1">${lap.deadline}</td>
-            <td class="border px-2 py-1">${lap.pic}</td>
-            <td class="border px-2 py-1">${lap.detail}</td>
-            <td class="border px-2 py-1 text-green-600 font-semibold">100% Selesai</td>
-          `;
-          selesaiBody.appendChild(row);
-        }
+            <td class="border p-2 text-center">
+              <input type="checkbox" ${lap.checklist[2] ? "checked" : ""} onchange="updateProgress(${i},2,this)">
+            </td>
+            <td class="border p-2 text-center">
+              ${progress === 100 ? 
+                "<span class='text-green-600 font-bold'>Selesai</span>" :
+                progress + "%"
+              }
+            </td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
       });
     }
 
-    function updateChecklist(index, step){
-      laporan[index].checklist[step] = !laporan[index].checklist[step];
+    function updateProgress(index, step, checkbox) {
+      laporan[index].checklist[step] = checkbox.checked;
+      localStorage.setItem("laporanData", JSON.stringify(laporan));
       renderTable();
     }
-
-    function saveProgress(index){
-      alert("Progress laporan '" + laporan[index].judul + "' berhasil disimpan!");
-    }
-
-    // inisialisasi
-    renderTable();
   </script>
 </body>
 </html>
