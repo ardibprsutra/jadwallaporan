@@ -1,0 +1,26 @@
+[
+  {
+    "judul": "Laporan Neraca",
+    "periode": "Juli 2025",
+    "deadline": "2025-08-28",
+    "pic1": "Andi",
+    "pic2": "Budi",
+    "checklist": [false, false, false]
+  },
+  {
+    "judul": "Laporan Laba Rugi",
+    "periode": "Juli 2025",
+    "deadline": "2025-08-30",
+    "pic1": "Citra",
+    "pic2": "Dewi",
+    "checklist": [true, false, false]
+  },
+  {
+    "judul": "Laporan Kolektibilitas Kredit",
+    "periode": "Juli 2025",
+    "deadline": "2025-08-27",
+    "pic1": "Eka",
+    "pic2": "Fajar",
+    "checklist": [true, true, false]
+  }
+]
