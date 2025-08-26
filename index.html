@@ -20,8 +20,8 @@
             <th class="border px-2 py-1">Judul Laporan</th>
             <th class="border px-2 py-1">Periode</th>
             <th class="border px-2 py-1">Batas Waktu</th>
-            <th class="border px-2 py-1">PIC 1</th>
-            <th class="border px-2 py-1">PIC 2</th>
+            <th class="border px-2 py-1">PIC</th>
+            <th class="border px-2 py-1">Detail</th>
             <th class="border px-2 py-1">Checklist</th>
             <th class="border px-2 py-1">Progress</th>
           </tr>
@@ -40,8 +40,8 @@
             <th class="border px-2 py-1">Judul Laporan</th>
             <th class="border px-2 py-1">Periode</th>
             <th class="border px-2 py-1">Batas Waktu</th>
-            <th class="border px-2 py-1">PIC 1</th>
-            <th class="border px-2 py-1">PIC 2</th>
+            <th class="border px-2 py-1">PIC</th>
+            <th class="border px-2 py-1">Detail</th>
             <th class="border px-2 py-1">Progress</th>
           </tr>
         </thead>
@@ -52,9 +52,9 @@
 
   <script>
     const laporan = [
-      {judul: "Laporan Neraca", periode: "Juli 2025", deadline: "2025-08-28", pic1: "Andi", pic2: "Budi", checklist: [false,false,false]},
-      {judul: "Laporan Laba Rugi", periode: "Juli 2025", deadline: "2025-08-30", pic1: "Citra", pic2: "Dewi", checklist: [true,false,false]},
-      {judul: "Laporan Kolektibilitas Kredit", periode: "Juli 2025", deadline: "2025-08-27", pic1: "Eka", pic2: "Fajar", checklist: [true,true,false]}
+      {judul: "Laporan Neraca", periode: "Juli 2025", deadline: "2025-08-28", pic: "Andi", detail: "Laporan posisi keuangan bank.", checklist: [false,false,false]},
+      {judul: "Laporan Laba Rugi", periode: "Juli 2025", deadline: "2025-08-30", pic: "Citra", detail: "Laporan pendapatan dan beban bank.", checklist: [true,false,false]},
+      {judul: "Laporan Kolektibilitas Kredit", periode: "Juli 2025", deadline: "2025-08-27", pic: "Eka", detail: "Laporan kualitas kredit nasabah.", checklist: [true,true,false]}
     ];
 
     function renderTable() {
@@ -67,21 +67,29 @@
       selesaiBody.innerHTML = "";
 
       let noAktif = 1, noSelesai = 1;
+      const today = new Date();
 
       laporan.forEach((lap, index) => {
         const totalChecklist = lap.checklist.filter(x => x).length;
         const progress = Math.round((totalChecklist / 3) * 100);
+        const deadlineDate = new Date(lap.deadline);
+        const diffDays = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
 
         if(progress < 100){
           // laporan aktif
           let row = document.createElement("tr");
+          // Jika deadline tinggal ≤ 5 hari, beri warna merah muda
+          if(diffDays <= 5){
+            row.classList.add("bg-red-100");
+          }
+
           row.innerHTML = `
             <td class="border px-2 py-1">${noAktif++}</td>
             <td class="border px-2 py-1">${lap.judul}</td>
             <td class="border px-2 py-1">${lap.periode}</td>
             <td class="border px-2 py-1">${lap.deadline}</td>
-            <td class="border px-2 py-1">${lap.pic1}</td>
-            <td class="border px-2 py-1">${lap.pic2}</td>
+            <td class="border px-2 py-1">${lap.pic}</td>
+            <td class="border px-2 py-1">${lap.detail}</td>
             <td class="border px-2 py-1">
               <div class="space-y-1">
                 <label><input type="checkbox" ${lap.checklist[0] ? "checked":""} onchange="updateChecklist(${index},0)"> Awal</label><br>
@@ -89,10 +97,11 @@
                 <label><input type="checkbox" ${lap.checklist[2] ? "checked":""} onchange="updateChecklist(${index},2)"> Pengiriman</label>
               </div>
             </td>
-            <td class="border px-2 py-1 w-40">
-              <div class="w-full bg-gray-200 rounded-full h-4">
+            <td class="border px-2 py-1 w-48">
+              <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
                 <div class="bg-blue-600 h-4 rounded-full text-xs text-white text-center" style="width:${progress}%">${progress}%</div>
               </div>
+              <button onclick="saveProgress(${index})" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">Save</button>
             </td>
           `;
           body.appendChild(row);
@@ -104,8 +113,8 @@
             <td class="border px-2 py-1">${lap.judul}</td>
             <td class="border px-2 py-1">${lap.periode}</td>
             <td class="border px-2 py-1">${lap.deadline}</td>
-            <td class="border px-2 py-1">${lap.pic1}</td>
-            <td class="border px-2 py-1">${lap.pic2}</td>
+            <td class="border px-2 py-1">${lap.pic}</td>
+            <td class="border px-2 py-1">${lap.detail}</td>
             <td class="border px-2 py-1 text-green-600 font-semibold">100% Selesai</td>
           `;
           selesaiBody.appendChild(row);
@@ -116,6 +125,10 @@
     function updateChecklist(index, step){
       laporan[index].checklist[step] = !laporan[index].checklist[step];
       renderTable();
+    }
+
+    function saveProgress(index){
+      alert("Progress laporan '" + laporan[index].judul + "' berhasil disimpan!");
     }
 
     // inisialisasi
