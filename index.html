@@ -2,96 +2,124 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Progress Laporan Bulanan</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
+  <h1 class="text-2xl font-bold mb-6">Progress Laporan Bulanan</h1>
 
-  <div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6">
-    <h1 class="text-xl font-bold mb-4">Progress Laporan Bulanan</h1>
-
-    <table class="w-full border-collapse border border-gray-300 text-sm">
+  <!-- Tabel laporan -->
+  <div class="overflow-x-auto bg-white p-4 rounded-lg shadow">
+    <table class="table-auto w-full text-sm border-collapse border border-gray-300">
       <thead class="bg-gray-200">
         <tr>
-          <th class="border p-2">No</th>
-          <th class="border p-2">Judul Laporan</th>
-          <th class="border p-2">Periode</th>
-          <th class="border p-2">Batas Waktu</th>
-          <th class="border p-2">PIC 1</th>
-          <th class="border p-2">PIC 2</th>
-          <th class="border p-2">Tahap Awal</th>
-          <th class="border p-2">Tahap Selesai</th>
-          <th class="border p-2">Tahap Pengiriman</th>
-          <th class="border p-2">Progress</th>
+          <th class="border border-gray-300 px-2 py-1">No</th>
+          <th class="border border-gray-300 px-2 py-1">Judul Laporan</th>
+          <th class="border border-gray-300 px-2 py-1">Periode</th>
+          <th class="border border-gray-300 px-2 py-1">Batas Waktu</th>
+          <th class="border border-gray-300 px-2 py-1">PIC 1</th>
+          <th class="border border-gray-300 px-2 py-1">PIC 2</th>
+          <th class="border border-gray-300 px-2 py-1">Checklist Progress</th>
+          <th class="border border-gray-300 px-2 py-1">Progress</th>
         </tr>
       </thead>
-      <tbody id="laporanBody"></tbody>
+      <tbody id="laporanTable"></tbody>
     </table>
   </div>
 
+  <!-- Tombol Save -->
+  <div class="mt-4">
+    <button onclick="saveJSON()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+      Save Progress
+    </button>
+  </div>
+
   <script>
-    let laporan = [];
+    // Ambil data dari localStorage atau JSON default
+    let laporan = JSON.parse(localStorage.getItem("laporanData")) || [
+      {
+        judul: "Laporan Neraca",
+        periode: "Juli 2025",
+        deadline: "2025-08-28",
+        pic1: "Andi",
+        pic2: "Budi",
+        checklist: [false, false, false]
+      },
+      {
+        judul: "Laporan Laba Rugi",
+        periode: "Juli 2025",
+        deadline: "2025-08-30",
+        pic1: "Citra",
+        pic2: "Dewi",
+        checklist: [true, false, false]
+      },
+      {
+        judul: "Laporan Kolektibilitas Kredit",
+        periode: "Juli 2025",
+        deadline: "2025-08-27",
+        pic1: "Eka",
+        pic2: "Fajar",
+        checklist: [true, true, false]
+      }
+    ];
 
-    // Muat data dari localStorage jika ada
-    const saved = localStorage.getItem("laporanData");
-
-    if (saved) {
-      laporan = JSON.parse(saved);
-      renderTable();
-    } else {
-      // Jika belum ada, ambil dari laporan.json
-      fetch("laporan.json")
-        .then(res => res.json())
-        .then(data => {
-          laporan = data;
-          renderTable();
-        });
-    }
-
+    // Render tabel
     function renderTable() {
-      const tbody = document.getElementById("laporanBody");
+      laporan.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      const tbody = document.getElementById("laporanTable");
       tbody.innerHTML = "";
 
-      // Urutkan laporan berdasarkan deadline terdekat
-      laporan.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      laporan.forEach((lap, index) => {
+        const progress = (lap.checklist.filter(c => c).length / 3) * 100;
 
-      laporan.forEach((lap, i) => {
-        const progress = lap.checklist.filter(c => c).length / 3 * 100;
-
-        const row = `
-          <tr class="border">
-            <td class="border p-2 text-center">${i + 1}</td>
-            <td class="border p-2">${lap.judul}</td>
-            <td class="border p-2">${lap.periode}</td>
-            <td class="border p-2">${lap.deadline}</td>
-            <td class="border p-2">${lap.pic1}</td>
-            <td class="border p-2">${lap.pic2}</td>
-            <td class="border p-2 text-center">
-              <input type="checkbox" ${lap.checklist[0] ? "checked" : ""} onchange="updateProgress(${i},0,this)">
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-100">
+            <td class="border border-gray-300 px-2 py-1 text-center">${index + 1}</td>
+            <td class="border border-gray-300 px-2 py-1">${lap.judul}</td>
+            <td class="border border-gray-300 px-2 py-1">${lap.periode}</td>
+            <td class="border border-gray-300 px-2 py-1">${lap.deadline}</td>
+            <td class="border border-gray-300 px-2 py-1">${lap.pic1}</td>
+            <td class="border border-gray-300 px-2 py-1">${lap.pic2}</td>
+            <td class="border border-gray-300 px-2 py-1">
+              <label><input type="checkbox" ${lap.checklist[0] ? "checked" : ""} onchange="updateChecklist(${index},0)"> Awal</label><br>
+              <label><input type="checkbox" ${lap.checklist[1] ? "checked" : ""} onchange="updateChecklist(${index},1)"> Selesai</label><br>
+              <label><input type="checkbox" ${lap.checklist[2] ? "checked" : ""} onchange="updateChecklist(${index},2)"> Kirim</label>
             </td>
-            <td class="border p-2 text-center">
-              <input type="checkbox" ${lap.checklist[1] ? "checked" : ""} onchange="updateProgress(${i},1,this)">
-            </td>
-            <td class="border p-2 text-center">
-              <input type="checkbox" ${lap.checklist[2] ? "checked" : ""} onchange="updateProgress(${i},2,this)">
-            </td>
-            <td class="border p-2 text-center">
-              ${progress === 100 ? 
-                "<span class='text-green-600 font-bold'>Selesai</span>" :
-                progress + "%"
-              }
+            <td class="border border-gray-300 px-2 py-1">
+              <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="bg-green-500 h-4 rounded-full text-xs text-white text-center" style="width:${progress}%">
+                  ${progress}%
+                </div>
+              </div>
             </td>
           </tr>
         `;
-        tbody.innerHTML += row;
       });
     }
 
-    function updateProgress(index, step, checkbox) {
-      laporan[index].checklist[step] = checkbox.checked;
+    // Update progress
+    function updateChecklist(index, step) {
+      laporan[index].checklist[step] = !laporan[index].checklist[step];
       localStorage.setItem("laporanData", JSON.stringify(laporan));
       renderTable();
     }
+
+    // Save ke file JSON
+    function saveJSON() {
+      const dataStr = JSON.stringify(laporan, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "laporan.json";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    renderTable();
   </script>
 </body>
 </html>
